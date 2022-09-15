@@ -31,7 +31,7 @@ func NewDBConfig(provider, dbname, username, password, hostname, port, timezone 
 
 func (c *DBConfig) InitDB() (*gorm.DB, error) {
 	if c.Provider == "postgres" {
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname%s port=%s sslmode=disable TimeZone=%s",
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=%s",
 			c.Hostname, c.Username, c.Password, c.DBName, c.Port, c.Timezone)
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{QueryFields: true})
 		if err != nil {

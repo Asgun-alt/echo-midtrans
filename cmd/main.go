@@ -47,6 +47,14 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("fatal error init DB: %w", err))
 	}
+	validator := config.NewCustomValidator()
+	e.Validator = validator
+	e.Use(func(handle echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			ctx.Set("validator", validator)
+			return handle(ctx)
+		}
+	})
 
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8000"},
@@ -79,7 +87,7 @@ func main() {
 	api := e.Group("/api")
 	InitUserHandler(api, db)
 
-	// Graceful Shutdownx
+	// Graceful Shutdownxs
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

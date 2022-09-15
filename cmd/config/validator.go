@@ -30,6 +30,6 @@ func NewCustomValidator() *CustomValidator {
 	return &CustomValidator{Validator: validate, Translator: trans}
 }
 
-func (cv *CustomValidator) Validation(i interface{}) error {
+func (cv *CustomValidator) Validate(i interface{}) error {
 	return cv.Validator.Struct(i)
 }

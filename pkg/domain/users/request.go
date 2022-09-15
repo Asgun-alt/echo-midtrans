@@ -3,8 +3,8 @@ package users
 import "gorm.io/gorm"
 
 type AddUserRequest struct {
-	Username  string `json:"user_name" validate:"required, max=50"`
-	Email     string `json:"email" validate:"required, email"`
+	Username  string `json:"user_name" validate:"required,max=50"`
+	Email     string `json:"email" validate:"required,email"`
 	Password1 string `json:"password_1" validate:"required,eqfield=Password2"`
 	Password2 string `json:"password_2" validate:"required"`
 }
