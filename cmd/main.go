@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"echo-midtrans/cmd/config"
+	campaignsHTTPHandler "echo-midtrans/pkg/campaigns/delivery/http"
+	campaignsRepository "echo-midtrans/pkg/campaigns/repository"
+	campaignsUseCase "echo-midtrans/pkg/campaigns/usecase"
+	"echo-midtrans/pkg/domain/campaign"
 	"echo-midtrans/pkg/domain/users"
 	usersHTTPHandler "echo-midtrans/pkg/users/delivery/http"
 	usersRepository "echo-midtrans/pkg/users/repository"
@@ -86,6 +90,7 @@ func main() {
 
 	api := e.Group("/api")
 	InitUserHandler(api, db)
+	InitCampaignHandler(api, db)
 
 	// Graceful Shutdownxs
 	quit := make(chan os.Signal, 1)
@@ -108,4 +113,10 @@ func InitUserHandler(appGroup *echo.Group, db *gorm.DB) {
 	var useCase users.UseCase = usersUseCase.NewUsersUseCase(dbRepository)
 
 	usersHTTPHandler.NewUsersHTTPHandler(appGroup, useCase)
+}
+
+func InitCampaignHandler(appGroup *echo.Group, db *gorm.DB) {
+	var dbRepository campaign.Repository = campaignsRepository.NewCampaignsDBRepository(db)
+	var useCase campaign.UseCase = campaignsUseCase.NewCampaignsUseCase(dbRepository)
+	campaignsHTTPHandler.NewCampaignHTTPHandler(*appGroup, useCase)
 }
