@@ -16,6 +16,7 @@ const (
 	PasswordEmpty      = "please fill the password"
 
 	CampaignAlreadyCreated = "the campaign is already created"
+	FileImageError         = "something is wrong when uploading image"
 )
 
 type Response struct {
