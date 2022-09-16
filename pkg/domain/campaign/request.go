@@ -46,9 +46,13 @@ func (data *UpdateCampaignRequest) ToCampaignDomain() *Campaign {
 }
 
 type CreateCampaignImageRequest struct {
-	ImageName   string `form:"image_name"`
-	Description string `form:"description"`
-	GoalAmount  int    `form:"goal_amount"`
-	Perks       string `form:"perks"`
-	UserID      uint   `form:"user_id"`
+	CampaignID uint `form:"campaign_id"`
+	IsPrimary  bool `form:"is_primary"`
+}
+
+func (data *CreateCampaignImageRequest) ToCampaignDomain() *CampaignImage {
+	return &CampaignImage{
+		CampaignID: data.CampaignID,
+		IsPrimary:  data.IsPrimary,
+	}
 }

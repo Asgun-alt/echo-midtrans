@@ -7,37 +7,40 @@ import (
 
 type Campaign struct {
 	gorm.Model
-	CampaignName  string `gorm:"column:campaign_name"`
-	Description   string `gorm:"column:description"`
-	Perks         string `gorm:"column:perks"`
-	BackerCount   int    `gorm:"column:backer_count"`
-	GoalAmount    int    `gorm:"column:goal_amount"`
-	CurrentAmount int    `gorm:"column:current_amount"`
-	Slug          string `gorm:"column:slug"`
+	CampaignName   string          `gorm:"column:campaign_name"`
+	Description    string          `gorm:"column:description"`
+	Perks          string          `gorm:"column:perks"`
+	BackerCount    int             `gorm:"column:backer_count"`
+	GoalAmount     int             `gorm:"column:goal_amount"`
+	CurrentAmount  int             `gorm:"column:current_amount"`
+	Slug           string          `gorm:"column:slug"`
+	CampaignImages []CampaignImage `gorm:"foreignKey:ID"`
 }
 
 func (c *Campaign) ToResponse() *Response {
 	return &Response{
-		CampaignName:  c.CampaignName,
-		Description:   c.Description,
-		Perks:         c.Perks,
-		BackerCount:   c.BackerCount,
-		GoalAmount:    c.GoalAmount,
-		CurrentAmount: c.CurrentAmount,
-		Slug:          c.Slug,
+		CampaignName:   c.CampaignName,
+		Description:    c.Description,
+		Perks:          c.Perks,
+		BackerCount:    c.BackerCount,
+		GoalAmount:     c.GoalAmount,
+		CurrentAmount:  c.CurrentAmount,
+		Slug:           c.Slug,
+		CampaignImages: c.CampaignImages,
 	}
 }
 
 func ToMultipleResponse(req []Campaign) (output []Response) {
 	for idx := range req {
 		output = append(output, Response{
-			ID:            req[idx].ID,
-			CampaignName:  req[idx].CampaignName,
-			Description:   req[idx].Description,
-			Perks:         req[idx].Perks,
-			BackerCount:   req[idx].BackerCount,
-			GoalAmount:    req[idx].GoalAmount,
-			CurrentAmount: req[idx].CurrentAmount,
+			ID:             req[idx].ID,
+			CampaignName:   req[idx].CampaignName,
+			Description:    req[idx].Description,
+			Perks:          req[idx].Perks,
+			BackerCount:    req[idx].BackerCount,
+			GoalAmount:     req[idx].GoalAmount,
+			CurrentAmount:  req[idx].CurrentAmount,
+			CampaignImages: req[idx].CampaignImages,
 		})
 	}
 	return output
@@ -46,6 +49,7 @@ func ToMultipleResponse(req []Campaign) (output []Response) {
 type CampaignImage struct {
 	gorm.Model
 	CampaignID uint   `gorm:"column:campaign_id"`
+	IsPrimary  bool   `gorm:"is_primary"`
 	FileName   string `gorm:"column:file_name"`
 }
 

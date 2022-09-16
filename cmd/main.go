@@ -8,6 +8,7 @@ import (
 	campaignsUseCase "echo-midtrans/pkg/campaigns/usecase"
 	"echo-midtrans/pkg/domain/campaign"
 	"echo-midtrans/pkg/domain/users"
+	paymentHTTPHandler "echo-midtrans/pkg/payments/delivery/http"
 	usersHTTPHandler "echo-midtrans/pkg/users/delivery/http"
 	usersRepository "echo-midtrans/pkg/users/repository"
 	usersUseCase "echo-midtrans/pkg/users/usecase"
@@ -31,8 +32,8 @@ func main() {
 		err error
 	)
 
-	e := echo.New()
-	e.Debug = true
+	router := echo.New()
+	router.Debug = true
 
 	err = config.InitConfig()
 	if err != nil {
@@ -52,15 +53,15 @@ func main() {
 		panic(fmt.Errorf("fatal error init DB: %w", err))
 	}
 	validator := config.NewCustomValidator()
-	e.Validator = validator
-	e.Use(func(handle echo.HandlerFunc) echo.HandlerFunc {
+	router.Validator = validator
+	router.Use(func(handle echo.HandlerFunc) echo.HandlerFunc {
 		return func(ctx echo.Context) error {
 			ctx.Set("validator", validator)
 			return handle(ctx)
 		}
 	})
 
-	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:8000"},
 		AllowMethods: []string{
 			http.MethodGet,
@@ -69,7 +70,10 @@ func main() {
 			http.MethodDelete},
 	}))
 
-	e.GET("/", func(ctx echo.Context) error {
+	// setup static file
+	router.Static("campaign-images", "./web/assets/campaign-images")
+
+	router.GET("/", func(ctx echo.Context) error {
 		return ctx.JSON(200, echo.Map{
 			"message": "hello world",
 		})
@@ -77,20 +81,27 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         fmt.Sprintf("%s:%s", viper.GetString("server.host"), viper.GetString("server.port")),
-		Handler:      e,
+		Handler:      router,
 		WriteTimeout: 3 * time.Minute,
 		ReadTimeout:  3 * time.Minute,
 		IdleTimeout:  5 * time.Minute,
 	}
 	go func() {
-		if err := e.StartServer(srv); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := router.StartServer(srv); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			panic(fmt.Sprintf("Error start server %v\n", err))
 		}
 	}()
 
-	api := e.Group("/api")
+	api := router.Group("/api")
 	InitUserHandler(api, db)
 	InitCampaignHandler(api, db)
+
+	type M map[string]interface{}
+	router.Renderer = paymentHTTPHandler.NewRenderer("./web/templates/*html", true)
+	router.GET("/html/index", func(c echo.Context) error {
+		data := M{"message": "Hello World!"}
+		return c.Render(http.StatusOK, "index.html", data)
+	})
 
 	// Graceful Shutdownxs
 	quit := make(chan os.Signal, 1)
