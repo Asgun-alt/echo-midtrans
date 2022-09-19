@@ -14,6 +14,9 @@ const (
 	PasswordNotSame    = "password 1 and password 2 must be the same"
 	PasswordNotMatch   = "invalid username/password. please try again"
 	PasswordEmpty      = "please fill the password"
+
+	CampaignAlreadyCreated = "the campaign is already created"
+	FileImageError         = "something is wrong when uploading image"
 )
 
 type Response struct {
