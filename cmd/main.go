@@ -3,12 +3,19 @@ package main
 import (
 	"context"
 	"echo-midtrans/cmd/config"
+	authHTTPHandler "echo-midtrans/pkg/auth/delivery/http"
+	authRepository "echo-midtrans/pkg/auth/repository"
+	authUseCase "echo-midtrans/pkg/auth/usecase"
 	campaignsHTTPHandler "echo-midtrans/pkg/campaigns/delivery/http"
 	campaignsRepository "echo-midtrans/pkg/campaigns/repository"
 	campaignsUseCase "echo-midtrans/pkg/campaigns/usecase"
+	"echo-midtrans/pkg/domain/auth"
 	"echo-midtrans/pkg/domain/campaign"
+	"echo-midtrans/pkg/domain/transaction"
 	"echo-midtrans/pkg/domain/users"
-	paymentHTTPHandler "echo-midtrans/pkg/payments/delivery/http"
+	transactionsHTTPHandler "echo-midtrans/pkg/transactions/delivery/http"
+	transactionsRepository "echo-midtrans/pkg/transactions/repository"
+	transactionsUseCase "echo-midtrans/pkg/transactions/usecase"
 	usersHTTPHandler "echo-midtrans/pkg/users/delivery/http"
 	usersRepository "echo-midtrans/pkg/users/repository"
 	usersUseCase "echo-midtrans/pkg/users/usecase"
@@ -94,14 +101,16 @@ func main() {
 
 	api := router.Group("/api")
 	InitUserHandler(api, db)
+	InitAuthHandler(api, db)
 	InitCampaignHandler(api, db)
+	InitTransactionHandler(api, db)
 
-	type M map[string]interface{}
-	router.Renderer = paymentHTTPHandler.NewRenderer("./web/templates/*html", true)
-	router.GET("/html/index", func(c echo.Context) error {
-		data := M{"message": "Hello World!"}
-		return c.Render(http.StatusOK, "index.html", data)
-	})
+	// type M map[string]interface{}
+	// router.Renderer = paymentHTTPHandler.NewRenderer("./web/templates/*html", true)
+	// router.GET("/html/index", func(c echo.Context) error {
+	// 	data := M{"message": "Hello World!"}
+	// 	return c.Render(http.StatusOK, "index.html", data)
+	// })
 
 	// Graceful Shutdownxs
 	quit := make(chan os.Signal, 1)
@@ -126,8 +135,23 @@ func InitUserHandler(appGroup *echo.Group, db *gorm.DB) {
 	usersHTTPHandler.NewUsersHTTPHandler(appGroup, useCase)
 }
 
+func InitAuthHandler(appGroup *echo.Group, db *gorm.DB) {
+	var dbRepository auth.DBRepository = authRepository.NewAuthDBRepository(db)
+	var useCase auth.UseCase = authUseCase.NewAuthUseCase(dbRepository)
+
+	authHTTPHandler.NewAuthHTTPHandler(appGroup, useCase)
+}
+
 func InitCampaignHandler(appGroup *echo.Group, db *gorm.DB) {
 	var dbRepository campaign.Repository = campaignsRepository.NewCampaignsDBRepository(db)
 	var useCase campaign.UseCase = campaignsUseCase.NewCampaignsUseCase(dbRepository)
-	campaignsHTTPHandler.NewCampaignHTTPHandler(*appGroup, useCase)
+
+	campaignsHTTPHandler.NewCampaignHTTPHandler(appGroup, useCase)
+}
+
+func InitTransactionHandler(appGroup *echo.Group, db *gorm.DB) {
+	var dbRepository transaction.Repository = transactionsRepository.NewTransactionDBRepository(db)
+	var useCase transaction.Usecase = transactionsUseCase.NewTransactionUseCase(dbRepository)
+
+	transactionsHTTPHandler.NewTransactionHTTPHandler(appGroup, useCase)
 }
