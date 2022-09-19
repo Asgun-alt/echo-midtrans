@@ -23,7 +23,7 @@ type CampaignHTTPHandler struct {
 	usecase campaign.UseCase
 }
 
-func NewCampaignHTTPHandler(appGroup echo.Group, campaignService campaign.UseCase) {
+func NewCampaignHTTPHandler(appGroup *echo.Group, campaignService campaign.UseCase) {
 	handler := &CampaignHTTPHandler{usecase: campaignService}
 
 	campaignGroup := appGroup.Group("/campaign")
