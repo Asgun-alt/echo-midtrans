@@ -6,7 +6,6 @@ import (
 	"echo-midtrans/pkg/domain/users"
 	"echo-midtrans/pkg/helpers"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -61,9 +60,7 @@ func (h *UsersHTTPHandler) AddUser(ctx echo.Context) error {
 
 	err = ctx.Validate(&request)
 	if err != nil {
-		fmt.Println("debug1")
 		if valErr, ok := err.(validator.ValidationErrors); ok {
-			fmt.Println("debug2")
 			return h.ResponseJSON(ctx, common.ValidationError, nil, valErr.Translate(valid.Translator), http.StatusBadRequest)
 		}
 		log.Println(err.Error())
