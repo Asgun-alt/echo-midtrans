@@ -16,6 +16,7 @@ const (
 	PasswordEmpty      = "please fill the password"
 
 	CampaignAlreadyCreated = "the campaign is already created"
+	InvalidCampaignID      = "invalid campaign id"
 	FileImageError         = "something is wrong when uploading image"
 )
 

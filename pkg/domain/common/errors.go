@@ -12,5 +12,6 @@ var (
 	ErrInvalidUserID      = errors.New(InvalidUserID)
 
 	ErrCampaignAlreadyCreated = errors.New(CampaignAlreadyCreated)
+	ErrInvalidCampaignID      = errors.New(InvalidCampaignID)
 	ErrFileImageError         = errors.New(FileImageError)
 )

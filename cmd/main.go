@@ -11,8 +11,10 @@ import (
 	campaignsUseCase "echo-midtrans/pkg/campaigns/usecase"
 	"echo-midtrans/pkg/domain/auth"
 	"echo-midtrans/pkg/domain/campaign"
+	"echo-midtrans/pkg/domain/payment"
 	"echo-midtrans/pkg/domain/transaction"
 	"echo-midtrans/pkg/domain/users"
+	paymentsUseCase "echo-midtrans/pkg/payments/usecase"
 	transactionsHTTPHandler "echo-midtrans/pkg/transactions/delivery/http"
 	transactionsRepository "echo-midtrans/pkg/transactions/repository"
 	transactionsUseCase "echo-midtrans/pkg/transactions/usecase"
@@ -150,8 +152,10 @@ func InitCampaignHandler(appGroup *echo.Group, db *gorm.DB) {
 }
 
 func InitTransactionHandler(appGroup *echo.Group, db *gorm.DB) {
+	var paymentUseCase payment.UseCase = paymentsUseCase.NewPaymentUseCase()
+
 	var dbRepository transaction.Repository = transactionsRepository.NewTransactionDBRepository(db)
-	var useCase transaction.Usecase = transactionsUseCase.NewTransactionUseCase(dbRepository)
+	var useCase transaction.Usecase = transactionsUseCase.NewTransactionUseCase(dbRepository, paymentUseCase)
 
 	transactionsHTTPHandler.NewTransactionHTTPHandler(appGroup, useCase)
 }
