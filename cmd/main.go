@@ -153,9 +153,10 @@ func InitCampaignHandler(appGroup *echo.Group, db *gorm.DB) {
 
 func InitTransactionHandler(appGroup *echo.Group, db *gorm.DB) {
 	var paymentUseCase payment.UseCase = paymentsUseCase.NewPaymentUseCase()
+	var campaignRepository campaign.Repository = campaignsRepository.NewCampaignsDBRepository(db)
 
 	var dbRepository transaction.Repository = transactionsRepository.NewTransactionDBRepository(db)
-	var useCase transaction.Usecase = transactionsUseCase.NewTransactionUseCase(dbRepository, paymentUseCase)
+	var useCase transaction.Usecase = transactionsUseCase.NewTransactionUseCase(dbRepository, paymentUseCase, campaignRepository)
 
 	transactionsHTTPHandler.NewTransactionHTTPHandler(appGroup, useCase)
 }

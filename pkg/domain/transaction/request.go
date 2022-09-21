@@ -15,7 +15,7 @@ type CreateTransactionRequest struct {
 
 type TransactionNotificationRequest struct {
 	TransactionStatus string `json:"transaction_status"`
-	OrderID           string `json:"order_id"`
+	OrderID           uint   `json:"order_id"`
 	PaymentType       string `json:"payment_type"`
 	FraudStatus       string `json:"fraud_status"`
 }

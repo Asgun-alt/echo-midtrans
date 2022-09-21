@@ -17,6 +17,18 @@ func NewTransactionDBRepository(db *gorm.DB) *TransactionDBRepository {
 	return &TransactionDBRepository{DB: db}
 }
 
+func (r *TransactionDBRepository) GetByTransactionID(ctx context.Context, transactionID uint) (*transaction.Transaction, error) {
+	var (
+		res transaction.Transaction
+	)
+
+	err := r.DB.WithContext(ctx).Find(&res, "id = ?", transactionID).Order("created_at ASC").Error
+	if err != nil {
+		return nil, fmt.Errorf("TransactionDBRepository.FindAll: %w", err)
+	}
+	return &res, nil
+}
+
 func (r *TransactionDBRepository) FindAll(ctx context.Context) ([]transaction.Transaction, error) {
 	var (
 		res []transaction.Transaction
@@ -70,10 +82,10 @@ func (r *TransactionDBRepository) Create(ctx context.Context, req *transaction.T
 	return req, nil
 }
 
-func (r *TransactionDBRepository) Update(ctx context.Context, req *transaction.Transaction) error {
+func (r *TransactionDBRepository) Update(ctx context.Context, req *transaction.Transaction) (*transaction.Transaction, error) {
 	err := r.DB.WithContext(ctx).Updates(req).Error
 	if err != nil {
-		return fmt.Errorf("TransactionDBRepository.Update: %w", err)
+		return nil, fmt.Errorf("TransactionDBRepository.Update: %w", err)
 	}
-	return nil
+	return req, nil
 }

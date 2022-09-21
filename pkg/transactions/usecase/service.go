@@ -2,18 +2,21 @@ package usecase
 
 import (
 	"context"
+	"echo-midtrans/pkg/domain/campaign"
 	"echo-midtrans/pkg/domain/payment"
 	"echo-midtrans/pkg/domain/transaction"
 )
 
 type TransactionUseCase struct {
 	PaymentService payment.UseCase
+	CampaignRepo   campaign.Repository
 	DBRepo         transaction.Repository
 }
 
-func NewTransactionUseCase(dbrepo transaction.Repository, paymentService payment.UseCase) *TransactionUseCase {
+func NewTransactionUseCase(dbrepo transaction.Repository, paymentService payment.UseCase, campaignRepo campaign.Repository) *TransactionUseCase {
 	return &TransactionUseCase{
 		DBRepo:         dbrepo,
+		CampaignRepo:   campaignRepo,
 		PaymentService: paymentService,
 	}
 }
@@ -53,7 +56,7 @@ func (uc *TransactionUseCase) CreateTransaction(ctx context.Context, req *transa
 	}
 
 	newTransaction.PaymentURL = paymentURL
-	err = uc.DBRepo.Update(ctx, newTransaction)
+	_, err = uc.DBRepo.Update(ctx, newTransaction)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +65,40 @@ func (uc *TransactionUseCase) CreateTransaction(ctx context.Context, req *transa
 }
 
 func (uc *TransactionUseCase) ProcessPayment(ctx context.Context, req *transaction.TransactionNotificationRequest) error {
-	// transactionID := req.OrderID
+	transactionID := req.OrderID
+
+	transaction, err := uc.DBRepo.GetByTransactionID(ctx, transactionID)
+	if err != nil {
+		return err
+	}
+
+	if req.PaymentType == "credit_card" && req.TransactionStatus == "capture" && req.FraudStatus == "accept" {
+		transaction.Status = "paid"
+	} else if req.TransactionStatus == "settlement" {
+		transaction.Status = "paid"
+	} else if req.TransactionStatus == "deny" || req.TransactionStatus == "expire" || req.TransactionStatus == "cancel" {
+		transaction.Status = "cancelled"
+	}
+
+	updatedTransaction, err := uc.DBRepo.Update(ctx, transaction)
+	if err != nil {
+		return err
+	}
+
+	campaign, err := uc.CampaignRepo.FindByCampaignID(ctx, updatedTransaction.CampaignID)
+	if err != nil {
+		return nil
+	}
+
+	if updatedTransaction.Status == "paid" {
+		campaign.BackerCount = campaign.BackerCount + 1
+		campaign.CurrentAmount = campaign.CurrentAmount + updatedTransaction.Amount
+
+		err := uc.CampaignRepo.Update(ctx, campaign)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

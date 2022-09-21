@@ -11,7 +11,6 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -28,7 +27,7 @@ func NewTransactionHTTPHandler(appGroup *echo.Group, transactionService transact
 	transactionGroup := appGroup.Group("/transaction")
 	transactionGroup.GET("/campaign/:id", handler.FindCampaignTransactions)
 	transactionGroup.GET("/user/:id", handler.FindUserTransactions)
-	transactionGroup.GET("/notification", handler.GetNotification)
+	transactionGroup.POST("/notification", handler.GetNotification)
 	transactionGroup.POST("", handler.CreateTransaction, middleware.JWTWithConfig(jwtConfig))
 }
 
@@ -81,15 +80,10 @@ func (h *TransactionHTTPHandler) FindUserTransactions(ctx echo.Context) error {
 
 func (h *TransactionHTTPHandler) CreateTransaction(ctx echo.Context) error {
 	var (
-		request transaction.CreateTransactionRequest
+		request transaction.TransactionNotificationRequest
 		err     error
 	)
 	valid := ctx.Get("validator").(*config.CustomValidator)
-	user := ctx.Get("user").(*jwt.Token)
-	claims := user.Claims.(*common.JWTCustomClaims)
-	userID := claims.UserID
-
-	request.UserID = userID
 
 	err = ctx.Bind(&request)
 	if err != nil {
@@ -106,13 +100,13 @@ func (h *TransactionHTTPHandler) CreateTransaction(ctx echo.Context) error {
 		return h.ResponseJSON(ctx, common.DataFailed, nil, common.UnknownError, http.StatusNotFound)
 	}
 
-	newTransaction, err := h.usecase.CreateTransaction(ctx.Request().Context(), &request)
+	err = h.usecase.ProcessPayment(ctx.Request().Context(), &request)
 	if err != nil {
 		log.Println(err.Error())
 		return h.ResponseJSON(ctx, common.DataFailed, nil, common.UnknownError, http.StatusInternalServerError)
 	}
 
-	return h.ResponseJSON(ctx, common.DataSuccess, newTransaction, nil, http.StatusCreated)
+	return h.ResponseJSON(ctx, common.DataSuccess, nil, nil, http.StatusOK)
 }
 
 func (h *TransactionHTTPHandler) GetNotification(ctx echo.Context) error {
