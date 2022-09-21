@@ -8,8 +8,12 @@ import (
 	"log"
 	"net/http"
 
+	customMiddleware "echo-midtrans/pkg/middlewares"
+
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type AuthHTTPHandler struct {
@@ -22,11 +26,23 @@ func NewAuthHTTPHandler(appGroup *echo.Group, uc auth.UseCase) {
 		Usecase: uc,
 	}
 
+	jwtConfig := customMiddleware.NewJWTMiddlewareConfig()
 	usersGroup := appGroup.Group("/auth")
-	usersGroup.POST("/login", handler.ValidateUser)
+	usersGroup.POST("/login", handler.Login)
+	usersGroup.GET("", handler.SafeRoute, middleware.JWTWithConfig(jwtConfig))
 }
 
-func (h *AuthHTTPHandler) ValidateUser(ctx echo.Context) error {
+func (h *AuthHTTPHandler) SafeRoute(ctx echo.Context) error {
+	user := ctx.Get("user").(*jwt.Token)
+	claims := user.Claims.(*common.JWTCustomClaims)
+	ID := claims.UserID
+
+	var response interface{} = ID
+
+	return h.ResponseJSON(ctx, common.DataSuccess, response, nil, http.StatusOK)
+}
+
+func (h *AuthHTTPHandler) Login(ctx echo.Context) error {
 	var (
 		request  auth.ValidateUserRequest
 		response *auth.Response
@@ -57,6 +73,13 @@ func (h *AuthHTTPHandler) ValidateUser(ctx echo.Context) error {
 		log.Println(err.Error())
 		return h.ResponseJSON(ctx, common.DataFailed, nil, common.UnknownError, http.StatusInternalServerError)
 	}
+
+	jwtCookie := new(http.Cookie)
+	jwtCookie.Name = "JWTCookie"
+	jwtCookie.Value = response.Token
+	jwtCookie.Expires = response.ExpiredAt
+	jwtCookie.Path = "/api"
+	ctx.SetCookie(jwtCookie)
 
 	return h.ResponseJSON(ctx, common.DataSuccess, response, nil, http.StatusOK)
 }

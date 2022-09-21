@@ -7,6 +7,8 @@ require (
 	github.com/spf13/viper v1.13.0
 )
 
+require github.com/midtrans/midtrans-go v1.3.5 // indirect
+
 require (
 	github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927 // indirect
 	github.com/go-playground/locales v0.14.0

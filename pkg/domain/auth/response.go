@@ -1,8 +1,10 @@
 package auth
 
-import "time"
+import (
+	"time"
+)
 
 type Response struct {
-	Token     string    `jsong:"token"`
+	Token     string    `json:"token"`
 	ExpiredAt time.Time `json:"expired_at"`
 }

@@ -34,7 +34,7 @@ func (uc *AuthUseCase) ValidateUser(ctx context.Context, req *auth.ValidateUserR
 
 	expiredAt := time.Now().Add(time.Hour * 1)
 	claims := &common.JWTCustomClaims{
-		UserName: user.Username,
+		UserID: user.ID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expiredAt.Unix(),
 		},

@@ -9,7 +9,8 @@ import (
 
 func NewJWTMiddlewareConfig() middleware.JWTConfig {
 	return middleware.JWTConfig{
-		Claims:     &common.JWTCustomClaims{},
-		SigningKey: []byte(viper.GetString("jwt.SecretKey")),
+		Claims:      &common.JWTCustomClaims{},
+		SigningKey:  []byte(viper.GetString("jwt.SecretKey")),
+		TokenLookup: "cookie:JWTCookie",
 	}
 }
